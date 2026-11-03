@@ -172,7 +172,7 @@ def user_installed_packages(runner, distro):
 
 
 def check_dnf(opts, runner):
-    declared = {n: n for n in read_text_manifest(opts.manifest_dir / "dnf-packages.txt")}
+    declared = {n: n for n in read_text_manifest(opts.dnf_manifest)}
 
     def native():
         installed = set(lines(runner(["rpm", "-qa", "--qf", "%{NAME}\\n"])))
@@ -192,7 +192,7 @@ def check_dnf(opts, runner):
 
 
 def check_apt(opts, runner):
-    declared = {n: n for n in read_text_manifest(opts.manifest_dir / "ubuntu-packages.txt")}
+    declared = {n: n for n in read_text_manifest(opts.apt_manifest)}
     skip = set(opts.skip) | {"tmux-sesh"}
 
     def native():
@@ -219,7 +219,7 @@ def check_flatpak(opts, runner):
     if not opts.flatpak:
         return [Result(title, status="disabled", detail="Flatpak disabled")]
     declared = {}
-    for line in read_text_manifest(opts.manifest_dir / "flatpak-packages.txt"):
+    for line in read_text_manifest(opts.flatpak_manifest):
         parts = line.split()
         if len(parts) >= 2:
             declared[parts[1]] = line
@@ -251,7 +251,7 @@ def check_snap(opts, runner):
     if not opts.snap:
         return [Result(title, status="disabled", detail="Snap disabled")]
     declared = {}
-    for line in read_text_manifest(opts.manifest_dir / "ubuntu-snap-packages.txt"):
+    for line in read_text_manifest(opts.snap_manifest):
         declared[line.split()[0]] = line
 
     def collect():
@@ -339,8 +339,28 @@ def parse_args(argv):
     )
     parser.add_argument("--platform", default=None, choices=sorted(CHECKS))
     parser.add_argument(
-        "--manifest-dir", type=Path, required=True,
-        help="directory containing the dotfiles package manifests",
+        "--manifest-dir", type=Path, default=Path("ansible/packages"),
+        help="directory containing package manifests (default: ./ansible/packages)",
+    )
+    parser.add_argument(
+        "--brewfile", type=Path,
+        help="Homebrew manifest path or name (default: Brewfile)",
+    )
+    parser.add_argument(
+        "--dnf-manifest", type=Path,
+        help="DNF manifest path or name (default: dnf-packages.txt)",
+    )
+    parser.add_argument(
+        "--apt-manifest", type=Path,
+        help="APT manifest path or name (default: ubuntu-packages.txt)",
+    )
+    parser.add_argument(
+        "--flatpak-manifest", type=Path,
+        help="Flatpak manifest path or name (default: flatpak-packages.txt)",
+    )
+    parser.add_argument(
+        "--snap-manifest", type=Path,
+        help="Snap manifest path or name (default: ubuntu-snap-packages.txt)",
     )
     parser.add_argument("--output", type=Path, help="write the report here instead of stdout")
     parser.add_argument(
@@ -350,7 +370,17 @@ def parse_args(argv):
     parser.add_argument("--no-snap", dest="snap", action="store_false")
     opts = parser.parse_args(argv)
     opts.platform = opts.platform or detect_platform()
-    opts.brewfile = opts.manifest_dir / "Brewfile"
+    for attribute, default_name in (
+        ("brewfile", "Brewfile"),
+        ("dnf_manifest", "dnf-packages.txt"),
+        ("apt_manifest", "ubuntu-packages.txt"),
+        ("flatpak_manifest", "flatpak-packages.txt"),
+        ("snap_manifest", "ubuntu-snap-packages.txt"),
+    ):
+        path = getattr(opts, attribute) or Path(default_name)
+        if not path.is_absolute():
+            path = opts.manifest_dir / path
+        setattr(opts, attribute, path)
     return opts
 
 

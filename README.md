@@ -20,7 +20,7 @@ never install, remove, or edit anything.
 ## Installation
 
 ```sh
-pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.2.0
+pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.3.0
 ```
 
 Any Python ≥ 3.10 works; there are no third-party dependencies.
@@ -32,7 +32,7 @@ user-installed-packages                 # one package name per line
 user-installed-packages --distro apt    # force the backend (auto-detected by default)
 user-installed-packages --json          # full detection result as JSON
 user-installed-packages --version
-user-installed-packages report --manifest-dir ./ansible/packages
+user-installed-packages report
 ```
 
 Exit status: `0` on success, `2` on error (unsupported distro, missing
@@ -43,15 +43,24 @@ the exit status.
 
 The `report` subcommand compares Homebrew formulae, casks, taps, and VS Code
 extensions on macOS; DNF and Flatpak on Fedora; and APT and Snap on Ubuntu.
-Pass the directory containing the manifests (`Brewfile`, `dnf-packages.txt`,
-`ubuntu-packages.txt`, `flatpak-packages.txt`, and
-`ubuntu-snap-packages.txt`) with `--manifest-dir`:
+By default, the report looks in `./ansible/packages` for `Brewfile`,
+`dnf-packages.txt`, `ubuntu-packages.txt`, `flatpak-packages.txt`, and
+`ubuntu-snap-packages.txt`. Set `--manifest-dir` to change the directory, or
+override any manifest independently. Relative manifest paths are resolved
+under `--manifest-dir`; absolute paths are used as given.
 
 ```sh
 user-installed-packages report --manifest-dir ./ansible/packages
 user-installed-packages report --manifest-dir ./ansible/packages \
   --skip PACKAGE --no-flatpak --output ~/.local/state/dotfiles/package-report.txt
+user-installed-packages report --manifest-dir ./personal/ansible/packages \
+  --apt-manifest apt-packages.txt --snap-manifest snap-packages.txt
 ```
+
+Available manifest options are `--brewfile`, `--dnf-manifest`,
+`--apt-manifest`, `--flatpak-manifest`, and `--snap-manifest`. Their defaults
+remain the conventional filenames above, so existing invocations continue to
+work.
 
 The report is read-only. `+` entries are installed but undeclared; `-`
 entries are declared but not installed. Use `--skip NAME` repeatedly to
