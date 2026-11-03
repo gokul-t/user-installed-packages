@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "List packages the user explicitly installed, excluding the OS image base"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{ name = "Gokul T" }]
 keywords = ["dnf", "apt", "rpm", "dpkg", "packages", "drift", "dotfiles"]
 classifiers = [

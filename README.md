@@ -22,7 +22,7 @@ removes, or edits anything.
 pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.1.0
 ```
 
-Any Python ≥ 3.9 works; there are no third-party dependencies.
+Any Python ≥ 3.10 works; there are no third-party dependencies.
 
 ## Usage
 
