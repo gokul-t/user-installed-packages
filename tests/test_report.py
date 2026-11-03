@@ -85,27 +85,35 @@ class ReportTest(unittest.TestCase):
     def test_report_defaults_to_conventional_manifest_paths(self):
         opts = report.parse_args(["--platform", "ubuntu"])
         self.assertEqual(opts.manifest_dir, Path("ansible/packages"))
-        self.assertEqual(opts.apt_manifest, Path("ansible/packages/ubuntu-packages.txt"))
-        self.assertEqual(opts.snap_manifest, Path("ansible/packages/ubuntu-snap-packages.txt"))
+        self.assertEqual(opts.apt_manifest, None)
+        self.assertEqual(opts.snap_manifest, None)
+        self.assertEqual(
+            report.manifest_paths(opts, "apt_manifest", "ubuntu-packages.txt"),
+            [Path("ansible/packages/ubuntu-packages.txt")],
+        )
 
     def test_manifest_paths_can_be_overridden_by_name_or_path(self):
         opts = report.parse_args([
             "--manifest-dir", str(self.root),
             "--brewfile", "personal.Brewfile",
+            "--brewfile", "shared.Brewfile",
             "--dnf-manifest", "fedora.txt",
             "--apt-manifest", "apt-packages.txt",
+            "--apt-manifest", "personal-apt.txt",
             "--flatpak-manifest", "apps.txt",
             "--snap-manifest", str(self.root / "custom-snap.txt"),
         ])
-        self.assertEqual(opts.brewfile, self.root / "personal.Brewfile")
-        self.assertEqual(opts.dnf_manifest, self.root / "fedora.txt")
-        self.assertEqual(opts.apt_manifest, self.root / "apt-packages.txt")
-        self.assertEqual(opts.flatpak_manifest, self.root / "apps.txt")
-        self.assertEqual(opts.snap_manifest, self.root / "custom-snap.txt")
+        self.assertEqual(opts.brewfile, [self.root / "personal.Brewfile", self.root / "shared.Brewfile"])
+        self.assertEqual(opts.dnf_manifest, [self.root / "fedora.txt"])
+        self.assertEqual(opts.apt_manifest, [self.root / "apt-packages.txt", self.root / "personal-apt.txt"])
+        self.assertEqual(opts.flatpak_manifest, [self.root / "apps.txt"])
+        self.assertEqual(opts.snap_manifest, [self.root / "custom-snap.txt"])
 
     def test_custom_apt_and_snap_manifests_are_read(self):
         (self.root / "apt-packages.txt").write_text("custom-apt\n")
+        (self.root / "personal-apt.txt").write_text("personal-apt\n")
         (self.root / "snap-packages.txt").write_text("custom-snap --classic\n")
+        (self.root / "personal-snap.txt").write_text("personal-snap\n")
 
         def runner(argv):
             if argv[0] == "snap":
@@ -116,13 +124,15 @@ class ReportTest(unittest.TestCase):
         opts = opts_for(
             self.root,
             "ubuntu",
-            apt_manifest=self.root / "apt-packages.txt",
-            snap_manifest=self.root / "snap-packages.txt",
+            apt_manifest=[self.root / "apt-packages.txt", self.root / "personal-apt.txt"],
+            snap_manifest=[self.root / "snap-packages.txt", self.root / "personal-snap.txt"],
         )
         with mock.patch.object(report, "detect", return_value=detected):
             text, complete = report.build_report(opts, runner=runner)
         self.assertIn("- custom-apt", text)
+        self.assertIn("- personal-apt", text)
         self.assertIn("- custom-snap --classic", text)
+        self.assertIn("- personal-snap", text)
         self.assertNotIn("- terraform", text)
         self.assertTrue(complete)
 
@@ -156,6 +166,9 @@ class ReportTest(unittest.TestCase):
         self.assertNotIn("+ old", text)
 
     def test_brew_keeps_options_and_reports_unsupported_lines(self):
+        personal_brewfile = self.root / "personal.Brewfile"
+        personal_brewfile.write_text('cask "new-cask"\n')
+
         def runner(argv):
             return {
                 ("brew", "list", "--formula"): "fd\n",
@@ -164,10 +177,16 @@ class ReportTest(unittest.TestCase):
                 ("brew", "tap"): "homebrew/core\nx/y\nnew/tap\n",
                 ("code", "--list-extensions"): "foo.bar\nbaz.qux\n",
             }[tuple(a for a in argv if a != "-1")]
-        text, complete = report.build_report(opts_for(self.root, "macos"), runner=runner)
+        opts = opts_for(
+            self.root,
+            "macos",
+            brewfile=[self.root / "Brewfile", personal_brewfile],
+        )
+        text, complete = report.build_report(opts, runner=runner)
         self.assertIn('+ brew "ripgrep"', text)
         self.assertIn('- brew "ffmpeg-full", link: true', text)
         self.assertIn('+ cask "rectangle"', text)
+        self.assertIn('- cask "new-cask"', text)
         self.assertIn('+ tap "new/tap"', text)
         self.assertIn('+ vscode "baz.qux"', text)
         self.assertIn('mas "Xcode"', text)

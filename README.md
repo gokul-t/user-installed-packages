@@ -20,7 +20,7 @@ never install, remove, or edit anything.
 ## Installation
 
 ```sh
-pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.3.0
+pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.4.0
 ```
 
 Any Python ≥ 3.10 works; there are no third-party dependencies.
@@ -58,9 +58,10 @@ user-installed-packages report --manifest-dir ./personal/ansible/packages \
 ```
 
 Available manifest options are `--brewfile`, `--dnf-manifest`,
-`--apt-manifest`, `--flatpak-manifest`, and `--snap-manifest`. Their defaults
-remain the conventional filenames above, so existing invocations continue to
-work.
+`--apt-manifest`, `--flatpak-manifest`, and `--snap-manifest`. Repeat an option
+to compare multiple manifests of the same type (for example shared and private
+package lists). With no override, the conventional filenames above are used,
+so existing invocations continue to work.
 
 The report is read-only. `+` entries are installed but undeclared; `-`
 entries are declared but not installed. Use `--skip NAME` repeatedly to

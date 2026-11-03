@@ -13,7 +13,7 @@ from importlib.metadata import version as package_version
 from user_installed_packages.core import BackendError, detect
 
 PROG = "user-installed-packages"
-FALLBACK_VERSION = "0.3.0"
+FALLBACK_VERSION = "0.4.0"
 
 
 def cli_version():
