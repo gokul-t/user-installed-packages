@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "user-installed-packages"
+version = "0.1.0"
+description = "List packages the user explicitly installed, excluding the OS image base"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [{ name = "Gokul T" }]
+keywords = ["dnf", "apt", "rpm", "dpkg", "packages", "drift", "dotfiles"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Systems Administration",
+]
+
+[project.urls]
+Repository = "https://github.com/gokul-t/user-installed-packages"
+Issues = "https://github.com/gokul-t/user-installed-packages/issues"
+
+[project.scripts]
+user-installed-packages = "user_installed_packages.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

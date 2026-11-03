@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: PYTHONPATH=src python -m unittest discover -s tests -v
+
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - fedora:40 # dnf4
+          - fedora:44 # dnf5
+          - debian:13 # apt
+          - ubuntu:24.04 # apt
+    container: ${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install python3
+        run: |
+          if command -v dnf >/dev/null; then
+            dnf install -y python3 && dnf clean all
+          else
+            apt-get update && apt-get install -y --no-install-recommends python3 && rm -rf /var/lib/apt/lists/*
+          fi
+      - name: Detection runs against this distro
+        run: PYTHONPATH=src python3 -m user_installed_packages --json
+      - name: Unit tests
+        run: PYTHONPATH=src python3 -m unittest discover -s tests -v
