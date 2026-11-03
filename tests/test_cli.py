@@ -53,6 +53,16 @@ class CliTest(unittest.TestCase):
         self.assertEqual(out, "")
         self.assertIn("nope", err)
 
+    def test_report_subcommand_is_dispatched(self):
+        from user_installed_packages import report
+
+        with mock.patch.object(report, "main", return_value=2) as report_main:
+            code, out, err = run_cli(["report", "--manifest-dir", "/tmp/manifests"])
+        self.assertEqual(code, 2)
+        self.assertEqual(out, "")
+        self.assertEqual(err, "")
+        report_main.assert_called_once_with(["--manifest-dir", "/tmp/manifests"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -13,7 +13,7 @@ from importlib.metadata import version as package_version
 from user_installed_packages.core import BackendError, detect
 
 PROG = "user-installed-packages"
-FALLBACK_VERSION = "0.1.0"
+FALLBACK_VERSION = "0.2.0"
 
 
 def cli_version():
@@ -37,10 +37,19 @@ def build_parser():
                         help="emit a JSON object instead of one name per line")
     parser.add_argument("--version", action="version",
                         version=f"%(prog)s {cli_version()}")
+    parser.epilog = (
+        "Run 'user-installed-packages report --help' for package manifest reporting."
+    )
     return parser
 
 
 def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv[:1] == ["report"]:
+        from user_installed_packages.report import main as report_main
+
+        return report_main(argv[1:])
+
     args = build_parser().parse_args(argv)
     try:
         result = detect(backend=args.distro)

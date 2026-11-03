@@ -13,13 +13,14 @@ Package managers on their own cannot answer this reliably:
 - Kernels installed by system updates are versioned, reason-`User` packages.
 
 `user-installed-packages` detects the packages the user asked for, excluding
-the image base, and prints them. It is read-only: it never installs,
-removes, or edits anything.
+the image base, and prints them. Its `report` subcommand compares installed
+packages against a supplied manifest directory. Both are read-only: they
+never install, remove, or edit anything.
 
 ## Installation
 
 ```sh
-pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.1.0
+pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.2.0
 ```
 
 Any Python ≥ 3.10 works; there are no third-party dependencies.
@@ -31,11 +32,33 @@ user-installed-packages                 # one package name per line
 user-installed-packages --distro apt    # force the backend (auto-detected by default)
 user-installed-packages --json          # full detection result as JSON
 user-installed-packages --version
+user-installed-packages report --manifest-dir ./ansible/packages
 ```
 
 Exit status: `0` on success, `2` on error (unsupported distro, missing
 tools, backend failure). Warnings are printed to stderr and do not affect
 the exit status.
+
+### Package manifest report
+
+The `report` subcommand compares Homebrew formulae, casks, taps, and VS Code
+extensions on macOS; DNF and Flatpak on Fedora; and APT and Snap on Ubuntu.
+Pass the directory containing the manifests (`Brewfile`, `dnf-packages.txt`,
+`ubuntu-packages.txt`, `flatpak-packages.txt`, and
+`ubuntu-snap-packages.txt`) with `--manifest-dir`:
+
+```sh
+user-installed-packages report --manifest-dir ./ansible/packages
+user-installed-packages report --manifest-dir ./ansible/packages \
+  --skip PACKAGE --no-flatpak --output ~/.local/state/dotfiles/package-report.txt
+```
+
+The report is read-only. `+` entries are installed but undeclared; `-`
+entries are declared but not installed. Use `--skip NAME` repeatedly to
+ignore packages. `--no-flatpak` and `--no-snap` disable those collectors.
+Output files are written privately and serialized with a lock. Exit status is
+`0` when all enabled collectors succeeded and `2` when one or more sources
+could not be compared.
 
 ### JSON output
 
@@ -100,8 +123,8 @@ print(result.packages)
 - The dnf backend relies on `dnf history`; if it is purged or unreadable,
   the fallback install-time window may misclassify upgraded image packages
   as user-installed (a warning is emitted in that case).
-- Only `dnf` (Fedora ≥ 41 / dnf5 and legacy dnf4) and `apt` (Debian, Ubuntu)
-  are supported today. Contributions welcome.
+- Package detection supports `dnf` (Fedora ≥ 41 / dnf5 and legacy dnf4) and
+  `apt` (Debian, Ubuntu); the report also supports Homebrew, Flatpak, and Snap.
 
 ## Development
 
