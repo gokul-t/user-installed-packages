@@ -44,8 +44,8 @@ the exit status.
 The `report` subcommand compares Homebrew formulae, casks, taps, and VS Code
 extensions on macOS; DNF and Flatpak on Fedora; and APT and Snap on Ubuntu.
 By default, the report looks in `./ansible/packages` for `Brewfile`,
-`dnf-packages.txt`, `ubuntu-packages.txt`, `flatpak-packages.txt`, and
-`ubuntu-snap-packages.txt`. Set `--manifest-dir` to change the directory, or
+`dnf-packages.txt`, `apt-packages.txt`, `flatpak-packages.txt`, and
+`snap-packages.txt`. Set `--manifest-dir` to change the directory, or
 override any manifest independently. Relative manifest paths are resolved
 under `--manifest-dir`; absolute paths are used as given.
 

@@ -209,7 +209,7 @@ def check_dnf(opts, runner):
 
 def check_apt(opts, runner):
     declared = {
-        n: n for path in manifest_paths(opts, "apt_manifest", "ubuntu-packages.txt")
+        n: n for path in manifest_paths(opts, "apt_manifest", "apt-packages.txt")
         for n in read_text_manifest(path)
     }
     skip = set(opts.skip) | {"tmux-sesh"}
@@ -271,7 +271,7 @@ def check_snap(opts, runner):
     if not opts.snap:
         return [Result(title, status="disabled", detail="Snap disabled")]
     declared = {}
-    for path in manifest_paths(opts, "snap_manifest", "ubuntu-snap-packages.txt"):
+    for path in manifest_paths(opts, "snap_manifest", "snap-packages.txt"):
         for line in read_text_manifest(path):
             declared[line.split()[0]] = line
 
@@ -376,7 +376,7 @@ def parse_args(argv):
     parser.add_argument(
         "--apt-manifest", type=Path,
         action="append",
-        help="APT manifest path or name (repeatable; default: ubuntu-packages.txt)",
+        help="APT manifest path or name (repeatable; default: apt-packages.txt)",
     )
     parser.add_argument(
         "--flatpak-manifest", type=Path,
@@ -386,7 +386,7 @@ def parse_args(argv):
     parser.add_argument(
         "--snap-manifest", type=Path,
         action="append",
-        help="Snap manifest path or name (repeatable; default: ubuntu-snap-packages.txt)",
+        help="Snap manifest path or name (repeatable; default: snap-packages.txt)",
     )
     parser.add_argument("--output", type=Path, help="write the report here instead of stdout")
     parser.add_argument(

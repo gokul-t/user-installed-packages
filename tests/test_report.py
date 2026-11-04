@@ -49,8 +49,8 @@ def make_manifests(root):
         'cask "ghostty"\nvscode "Foo.Bar"\nmas "Xcode", id: 1\n'
     )
     (root / "dnf-packages.txt").write_text("# c\nneovim\ngit\ntmux-sesh\n")
-    (root / "ubuntu-packages.txt").write_text("git\nzsh\ntmux-sesh\n")
-    (root / "ubuntu-snap-packages.txt").write_text("# c\ncode --classic\nhelm\nterraform\n")
+    (root / "apt-packages.txt").write_text("git\nzsh\ntmux-sesh\n")
+    (root / "snap-packages.txt").write_text("# c\ncode --classic\nhelm\nterraform\n")
     (root / "flatpak-packages.txt").write_text("flathub a.B\nflathub c.D\n")
 
 
@@ -88,8 +88,8 @@ class ReportTest(unittest.TestCase):
         self.assertEqual(opts.apt_manifest, None)
         self.assertEqual(opts.snap_manifest, None)
         self.assertEqual(
-            report.manifest_paths(opts, "apt_manifest", "ubuntu-packages.txt"),
-            [Path("ansible/packages/ubuntu-packages.txt")],
+            report.manifest_paths(opts, "apt_manifest", "apt-packages.txt"),
+            [Path("ansible/packages/apt-packages.txt")],
         )
 
     def test_manifest_paths_can_be_overridden_by_name_or_path(self):
