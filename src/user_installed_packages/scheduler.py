@@ -202,7 +202,8 @@ def install_systemd_timer(
         user: If True, install as user service
 
     Returns:
-        True if installation succeeded
+        True if installation succeeded and changes were made
+        False if already configured correctly or installation failed
     """
     # Determine systemd unit directory
     if user:
@@ -214,6 +215,12 @@ def install_systemd_timer(
 
     service_path = unit_dir / f"{label}.service"
     timer_path = unit_dir / f"{label}.timer"
+
+    # Check if already configured identically (idempotent check)
+    if (service_path.exists() and timer_path.exists()):
+        if (service_path.read_text() == service_content and
+            timer_path.read_text() == timer_content):
+            return False  # No changes needed
 
     # Write files
     service_path.write_text(service_content)
@@ -294,12 +301,18 @@ def install_launchd_agent(
         label: LaunchAgent label (also used for filename)
 
     Returns:
-        True if installation succeeded
+        True if installation succeeded and changes were made
+        False if already configured correctly or installation failed
     """
     launch_agent_dir = Path.home() / "Library" / "LaunchAgents"
     launch_agent_dir.mkdir(parents=True, exist_ok=True)
 
     plist_path = launch_agent_dir / f"{label}.plist"
+
+    # Check if already configured identically (idempotent check)
+    if plist_path.exists() and plist_path.read_text() == plist_content:
+        return False  # No changes needed
+
     plist_path.write_text(plist_content)
 
     # Load the agent
@@ -355,8 +368,11 @@ def install_cron_job(
         schedule: cron schedule expression or special time (e.g., "weekly")
 
     Returns:
-        True if installation succeeded
+        True if installation succeeded and changes were made
+        False if already configured correctly or installation failed
     """
+    expected_job_line = f"{schedule} {command}  # {name}"
+    
     try:
         # Get current crontab
         result = subprocess.run(
@@ -367,6 +383,11 @@ def install_cron_job(
     except FileNotFoundError:
         return False
 
+    # Check if job already exists with same content
+    for line in current.splitlines():
+        if name in line and line.strip() == expected_job_line.strip():
+            return False  # Already configured identically
+
     # Remove any existing job with this name
     lines = [
         line for line in current.splitlines()
@@ -374,7 +395,7 @@ def install_cron_job(
     ]
 
     # Add new job
-    lines.append(f"{schedule} {command}  # {name}")
+    lines.append(expected_job_line)
 
     # Install new crontab
     try:

@@ -117,13 +117,22 @@ def schedule_main(argv=None):
             label=args.label,
         )
 
-        if result:
-            scheduler_type = detect_scheduler()
+        scheduler_type = detect_scheduler()
+        if result is False:
+            # Already configured correctly - not an error, just no changes
+            if enabled:
+                print(f"Package drift report already scheduled via {scheduler_type}", file=sys.stderr)
+            else:
+                print(f"Package drift report scheduler already disabled ({scheduler_type})", file=sys.stderr)
+            return 0
+        elif result is True:
             if enabled:
                 print(f"Package drift report scheduled via {scheduler_type}", file=sys.stderr)
             else:
                 print(f"Package drift report scheduler disabled ({scheduler_type})", file=sys.stderr)
+            return 0
         else:
+            # result is None or unexpected
             print(f"Failed to {'enable' if enabled else 'disable'} scheduler", file=sys.stderr)
             return 2
     except Exception as error:
