@@ -32,3 +32,40 @@ __all__ = [
     "read_os_release",
     "run",
 ]
+
+# Scheduler module exports
+from user_installed_packages.scheduler import (
+    DEFAULT_LABEL,
+    DEFAULT_ON_CALENDAR,
+    SchedulerError,
+    check_scheduler_enabled,
+    detect_scheduler,
+    disable_cron_job,
+    disable_launchd_agent,
+    disable_systemd_timer,
+    generate_launchd_plist,
+    generate_systemd_service,
+    generate_systemd_timer,
+    install_cron_job,
+    install_launchd_agent,
+    install_systemd_timer,
+    schedule_report,
+)
+
+__all__.extend([
+    "DEFAULT_LABEL",
+    "DEFAULT_ON_CALENDAR",
+    "SchedulerError",
+    "check_scheduler_enabled",
+    "detect_scheduler",
+    "disable_cron_job",
+    "disable_launchd_agent",
+    "disable_systemd_timer",
+    "generate_launchd_plist",
+    "generate_systemd_service",
+    "generate_systemd_timer",
+    "install_cron_job",
+    "install_launchd_agent",
+    "install_systemd_timer",
+    "schedule_report",
+])

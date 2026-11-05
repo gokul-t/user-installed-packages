@@ -63,6 +63,35 @@ class CliTest(unittest.TestCase):
         self.assertEqual(err, "")
         report_main.assert_called_once_with(["--manifest-dir", "/tmp/manifests"])
 
+    def test_schedule_subcommand_is_dispatched(self):
+        from user_installed_packages import scheduler
+
+        with mock.patch("user_installed_packages.schedule_report", return_value=True) as mock_schedule:
+            with mock.patch.object(scheduler, "detect_scheduler", return_value="systemd"):
+                code, out, err = run_cli([
+                    "schedule",
+                    "--manifest-dir", "/tmp/manifests",
+                    "--output", "/tmp/report.txt",
+                ])
+        self.assertEqual(code, 0)
+        self.assertIn("scheduled", err.lower())
+        mock_schedule.assert_called_once()
+
+    def test_schedule_subcommand_can_disable(self):
+        from user_installed_packages import scheduler
+
+        with mock.patch("user_installed_packages.schedule_report", return_value=True) as mock_schedule:
+            with mock.patch.object(scheduler, "detect_scheduler", return_value="systemd"):
+                code, out, err = run_cli([
+                    "schedule",
+                    "--disable",
+                ])
+        self.assertEqual(code, 0)
+        self.assertIn("disabled", err.lower())
+        # Check that enabled=False was passed
+        call_args = mock_schedule.call_args
+        self.assertEqual(call_args.kwargs.get("enabled"), False)
+
 
 if __name__ == "__main__":
     unittest.main()

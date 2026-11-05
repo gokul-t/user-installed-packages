@@ -20,7 +20,7 @@ never install, remove, or edit anything.
 ## Installation
 
 ```sh
-pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.4.0
+pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.5.0
 ```
 
 Any Python ≥ 3.10 works; there are no third-party dependencies.
@@ -97,6 +97,34 @@ result = detect()                 # auto-detect the distro
 result = detect("dnf")            # or force a backend
 print(result.packages)
 ```
+
+### Scheduling reports
+
+Use `schedule_report()` to schedule automatic drift reports:
+
+```python
+from user_installed_packages import schedule_report
+
+# Enable scheduled weekly reports (default)
+schedule_report(command=["user-installed-packages", "report"])
+
+# Disable the scheduler
+schedule_report(enabled=False)
+```
+
+The `schedule` CLI subcommand provides a convenient interface:
+
+```sh
+# Enable scheduled reports
+user-installed-packages schedule --enable --manifest-dir ./ansible/packages
+
+# Disable the scheduler
+user-installed-packages schedule --disable
+```
+
+The library automatically detects the best available scheduler:
+- **Linux**: systemd user timer (default), cron (fallback)
+- **macOS**: LaunchAgent
 
 ## How it works
 
