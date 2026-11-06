@@ -43,7 +43,7 @@ jobs:
         run: |
           VERSION="${VERSION}"
           cd dist
-          tar czf "../user-installed-packages-v${VERSION}.${{ matrix.os }}-${{ matrix.arch }}.tar.gz" \
+          tar czf "user-installed-packages-v${VERSION}.${{ matrix.os }}-${{ matrix.arch }}.tar.gz" \
             user-installed-packages
       - uses: actions/upload-artifact@v4
         with:
