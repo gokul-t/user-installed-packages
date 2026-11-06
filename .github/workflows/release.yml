@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-amd64
+            os: linux
+            arch: amd64
+            runner: ubuntu-latest
+          - target: linux-arm64
+            os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - target: macos-amd64
+            os: darwin
+            arch: amd64
+            runner: macos-13
+          - target: macos-arm64
+            os: darwin
+            arch: arm64
+            runner: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pyinstaller>=6"
+          python -m pip install .
+      - name: Align package version with release tag
+        run: |
+          echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          sed -i "s/^version = .*/version = \"${VERSION}\"/" pyproject.toml
+      - name: Build binary
+        run: pyinstaller --onefile --name user-installed-packages src/user_installed_packages/__main__.py
+      - name: Package binary
+        run: |
+          VERSION="${VERSION}"
+          tar czf "dist/user-installed-packages-v${VERSION}.${{ matrix.os }}-${{ matrix.arch }}.tar.gz" \
+            user-installed-packages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.target }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  smoke:
+    name: Smoke test ${{ matrix.target }}
+    needs: build
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-amd64
+            runner: ubuntu-latest
+            image: fedora:40
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+            image: fedora:40
+          - target: macos-amd64
+            runner: macos-13
+            image: ""
+          - target: macos-arm64
+            runner: macos-14
+            image: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: binary-${{ matrix.target }}
+          path: dist
+      - name: Extract and smoke test
+        run: |
+          tar xzf dist/*.tar.gz
+          chmod +x user-installed-packages
+      - name: Smoke test binary
+        run: ./user-installed-packages --version
+      - name: Smoke test package detection
+        if: matrix.image != ''
+        run: docker run --rm -v "$PWD:/work" -w /work ${{ matrix.image }} /work/user-installed-packages --json
+
+  release:
+    name: Publish release
+    needs: smoke
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: binary-*
+          path: dist
+          merge-multiple: true
+      - name: Generate checksums
+        run: sha256sum dist/*.tar.gz > dist/checksums.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/checksums.txt
+          generate_release_notes: true

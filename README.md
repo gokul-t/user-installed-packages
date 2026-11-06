@@ -19,8 +19,23 @@ never install, remove, or edit anything.
 
 ## Installation
 
+### Prebuilt binary
+
+Install with [`bin`](https://github.com/marcosnils/bin), the binary package
+manager:
+
 ```sh
-pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.5.0
+bin install github.com/gokul-t/user-installed-packages
+```
+
+`bin` downloads the latest release binary for your platform (Linux amd64/arm64
+and macOS amd64/arm64), installs it into your user bin directory, and keeps it
+updated.
+
+### pipx
+
+```sh
+pipx install git+https://github.com/gokul-t/user-installed-packages.git@v0.6.2
 ```
 
 Any Python ≥ 3.10 works; there are no third-party dependencies.
@@ -173,6 +188,23 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 CI runs the unit tests on supported Python versions and a smoke test inside
 the `fedora:40` (dnf4), `fedora:44` (dnf5), `ubuntu:24.04` and `debian:13`
 containers.
+
+### Building a binary
+
+```sh
+python3 -m venv .venv
+.venv/bin/pip install pyinstaller .
+.venv/bin/pyinstaller --onefile --name user-installed-packages src/user_installed_packages/__main__.py
+```
+
+This produces `dist/user-installed-packages`. Release tarballs follow the
+naming `user-installed-packages-v<version>.<os>-<arch>.tar.gz` and are
+published as GitHub releases (which `bin` installs from) by the
+[Release workflow](.github/workflows/release.yml) whenever a `v*` tag is pushed.
+
+Releases are triggered by pushing a `v*` tag; the workflow builds the binary for
+Linux (amd64/arm64) and macOS (amd64/arm64), smoke tests it, and publishes the
+tarballs plus a `checksums.txt` to the GitHub release.
 
 ## License
 
