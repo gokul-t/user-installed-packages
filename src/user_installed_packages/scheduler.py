@@ -250,7 +250,8 @@ def disable_systemd_timer(label: str = DEFAULT_LABEL, user: bool = True) -> bool
         user: If True, manage user service
 
     Returns:
-        True if removal succeeded
+        True if removal succeeded and changes were made
+        False if already disabled (nothing to remove)
     """
     if user:
         unit_dir = Path.home() / ".config" / "systemd" / "user"
@@ -259,6 +260,10 @@ def disable_systemd_timer(label: str = DEFAULT_LABEL, user: bool = True) -> bool
 
     service_path = unit_dir / f"{label}.service"
     timer_path = unit_dir / f"{label}.timer"
+
+    # Nothing to disable when the unit files are already gone.
+    if not (service_path.exists() or timer_path.exists()):
+        return False
 
     try:
         subprocess.run(
@@ -337,9 +342,14 @@ def disable_launchd_agent(label: str = DEFAULT_LABEL) -> bool:
         label: LaunchAgent label
 
     Returns:
-        True if removal succeeded
+        True if removal succeeded and changes were made
+        False if the agent plist is already gone (nothing to disable)
     """
     launch_agent_path = Path.home() / "Library" / "LaunchAgents" / f"{label}.plist"
+
+    if not launch_agent_path.exists():
+        # Nothing to disable when the agent plist is already gone.
+        return False
 
     try:
         subprocess.run(
@@ -416,7 +426,8 @@ def disable_cron_job(name: str) -> bool:
         name: Name identifier for the job
 
     Returns:
-        True if removal succeeded
+        True if removal succeeded and changes were made
+        False if the job is not scheduled (nothing to remove)
     """
     try:
         result = subprocess.run(
@@ -424,16 +435,22 @@ def disable_cron_job(name: str) -> bool:
             capture_output=True, text=True, check=False,
         )
         if result.returncode != 0:
-            return True  # No crontab, job doesn't exist
+            # No crontab in use means no scheduled job can exist.
+            return False
         current = result.stdout
     except FileNotFoundError:
-        return True
+        # No crontab available means no scheduled job can exist.
+        return False
 
     # Remove lines with this name
     lines = [
         line for line in current.splitlines()
         if name not in line
     ]
+
+    if len(lines) == len(current.splitlines()):
+        # No scheduled job matched, so the job is already disabled.
+        return False
 
     if len(lines) < len(current.splitlines()):
         # Something changed, update crontab

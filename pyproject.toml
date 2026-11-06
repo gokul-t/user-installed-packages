@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "user-installed-packages"
-version = "0.6.1"
+version = "0.6.2"
 description = "Detect user-installed packages and report manifest drift"
 readme = "README.md"
 license = { text = "MIT" }

@@ -16,7 +16,7 @@ from pathlib import Path
 from user_installed_packages.core import BackendError, detect
 
 PROG = "user-installed-packages"
-FALLBACK_VERSION = "0.6.1"
+FALLBACK_VERSION = "0.6.2"
 
 
 def cli_version():
