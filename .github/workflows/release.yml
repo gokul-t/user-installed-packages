@@ -61,10 +61,8 @@ jobs:
         include:
           - target: linux-amd64
             runner: ubuntu-latest
-            image: fedora:40
           - target: linux-arm64
             runner: ubuntu-24.04-arm
-            image: fedora:40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -78,8 +76,7 @@ jobs:
       - name: Smoke test binary
         run: ./user-installed-packages --version
       - name: Smoke test package detection
-        if: matrix.image != ''
-        run: docker run --rm -v "$PWD:/work" -w /work ${{ matrix.image }} /work/user-installed-packages --json
+        run: ./user-installed-packages --json > /dev/null
 
   release:
     name: Publish release
