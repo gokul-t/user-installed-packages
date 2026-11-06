@@ -28,9 +28,8 @@ manager:
 bin install github.com/gokul-t/user-installed-packages
 ```
 
-`bin` downloads the latest release binary for your platform (Linux amd64/arm64
-and macOS amd64/arm64), installs it into your user bin directory, and keeps it
-updated.
+`bin` downloads the latest release binary for your platform (Linux amd64/arm64),
+installs it into your user bin directory, and keeps it updated.
 
 ### pipx
 
@@ -203,8 +202,8 @@ published as GitHub releases (which `bin` installs from) by the
 [Release workflow](.github/workflows/release.yml) whenever a `v*` tag is pushed.
 
 Releases are triggered by pushing a `v*` tag; the workflow builds the binary for
-Linux (amd64/arm64) and macOS (amd64/arm64), smoke tests it, and publishes the
-tarballs plus a `checksums.txt` to the GitHub release.
+Linux (amd64/arm64), smoke tests it, and publishes the tarballs plus a
+`checksums.txt` to the GitHub release.
 
 ## License
 

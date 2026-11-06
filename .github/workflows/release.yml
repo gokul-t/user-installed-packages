@@ -23,14 +23,6 @@ jobs:
             os: linux
             arch: arm64
             runner: ubuntu-24.04-arm
-          - target: macos-amd64
-            os: darwin
-            arch: amd64
-            runner: macos-13
-          - target: macos-arm64
-            os: darwin
-            arch: arm64
-            runner: macos-14
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -50,7 +42,8 @@ jobs:
       - name: Package binary
         run: |
           VERSION="${VERSION}"
-          tar czf "dist/user-installed-packages-v${VERSION}.${{ matrix.os }}-${{ matrix.arch }}.tar.gz" \
+          cd dist
+          tar czf "../user-installed-packages-v${VERSION}.${{ matrix.os }}-${{ matrix.arch }}.tar.gz" \
             user-installed-packages
       - uses: actions/upload-artifact@v4
         with:
@@ -72,12 +65,6 @@ jobs:
           - target: linux-arm64
             runner: ubuntu-24.04-arm
             image: fedora:40
-          - target: macos-amd64
-            runner: macos-13
-            image: ""
-          - target: macos-arm64
-            runner: macos-14
-            image: ""
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
